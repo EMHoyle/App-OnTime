@@ -3,29 +3,28 @@ import axios from 'axios';
 import {Button, Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Input, Label} from 'reactstrap';
 
 //constante JSON
-const url = "https://jsonplaceholder.typicode.com/todos"
+const url = "https://jsonplaceholder.typicode.com/todos";
+const initState = { 
+    todo: [],
+    modalInsertar: false,
+    modalEliminar: false,
+    tipoModal: "",
+    form: {
+        id: "",
+        title: "",
+      }
+};
 
 export class TaskM extends Component {
     
     constructor(props) {
         super(props)
 
-        this.state = { 
-            todo: [],
-            modalInsertar: false,
-            modalEliminar: false,
-            tipoModal: "",
-            form: {
-                id: "",
-                title: "",
-              },
-        };
+        this.state = initState
     }
 
 //acciones
-    modalInsertar=()=>{
-        this.setState({modalInsertar: !this.state.modalInsertar});
-    }
+    modalInsertar = () => this.setState(oldState => ({...initState, todo: oldState.todo, modalInsertar: !oldState.modalInsertar, }))
 
     handleChange= async e=>{
         e.persist();
@@ -94,12 +93,23 @@ export class TaskM extends Component {
             <div>
                 <div className="App">
                     <br />
-                    <Button className="btn btn-success" 
-                    onClick={()=>{this.setState({form: null, tipoModal: "insertar"}); this.modalInsertar()}}>Agregar Task</Button>
+                    <Button
+                        className="btn btn-success" 
+                        onClick={
+                            () => {
+                                this.setState(oldState => ({
+                                    ...oldState,
+                                    tipoModal: "insertar"
+                                }));
+                                this.modalInsertar()
+                            }}
+                    >
+                                Agregar Task
+                    </Button>
                     <br /><br />
                     <table className="table">
                         <thead>
-                            <tr>
+                            <tr >
                                 <th>ID</th>
                                 <th>TASK</th>
                                 <th>ACCIONES</th>
@@ -108,7 +118,7 @@ export class TaskM extends Component {
                         <tbody>
                             {this.state.todo.map((userID,)=>{
                                 return(
-                                    <tr>
+                                    <tr key={userID.id}>
                                         <td>{userID.id}</td>
                                         <td>{userID.title}</td>
                                         <td>
@@ -156,7 +166,8 @@ export class TaskM extends Component {
 
                     <ModalFooter>
                         {this.state.tipoModal == "insertar"?
-                        <Button className="btn btn-success" onClick={()=>this.peticionPost()}>Agregar</Button>:
+                        <Button className="btn btn-success" onClick={()=>this.peticionPost()}>Agregar</Button>
+                        :
                         <Button className="btn btn-success" onClick={()=>this.peticionPut()}>Actualizar</Button>
                         }
                         <Button className="btn btn-danger" onClick={()=>this.modalInsertar()}>Cancelar</Button>
@@ -178,4 +189,4 @@ export class TaskM extends Component {
     }
 }
 
-export default TaskM
+export default TaskM;
