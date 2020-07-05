@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import {Button, Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Input, Label} from 'reactstrap';
 
-//constante JSON
+//constante
 const url = "https://jsonplaceholder.typicode.com/todos/";
 const initState = { 
             todo: [],
@@ -12,6 +12,7 @@ const initState = {
             form: {
                 id: "",
                 title: "",
+                completed: ""
               },
         };
 
@@ -28,6 +29,7 @@ export class TaskM extends Component {
             form: {
                 id: "",
                 title: "",
+                completed: ""
               },
         };
     }
@@ -42,7 +44,7 @@ export class TaskM extends Component {
         await this.setState({
             form: {
                 ...this.state.form,
-                [e.target.name]: e.target.value
+                [e.target.name]: e.target.value,
             }
         });
         console.log(this.state.form);
@@ -59,7 +61,7 @@ export class TaskM extends Component {
     }
 
 //peticiones
-    peticionGet=()=> {
+    peticionGet= () => {
         axios.get(url).then(response=>{
             this.setState({todo: response.data});
         }).catch(error=>{
@@ -74,18 +76,23 @@ export class TaskM extends Component {
             console.log(error.message);
     })
 
-    peticionPut=()=>{
-          axios.put("https://jsonplaceholder.typicode.com/todos/1", this.state.form).then(response=>{
-                  this.modalInsertar();
-                  this.peticionGet();
-          }).catch(error=>{
-             console.log(error.message);
-      })}
+    peticionPut = () => {
+        axios.put(`${url}${this.state.form.id}`, this.state.form).then(response=>{
+          if (response.status === 200) {
+              const newToDo = [...this.state.todo]
+              newToDo[this.state.form.id - 1].title = this.state.form.title
+              this.setState(oldState => ({...initState, todo: newToDo, modalInsertar: !oldState.modalInsertar, }))
+          }
+        }).catch(error=>{
+           console.log(error.message);
+    })}
 
-     peticionDelete=()=>{
+    peticionDelete=()=>{
         axios.delete(url + this.state.form.id).then(response=>{
-            this.setState({modalEliminar: false});
-            this.peticionGet();
+            if (response.status === 200) {
+                const newToDo = this.state.todo.filter(task => task.id !== this.state.form.id);
+                this.setState({...initState, todo: newToDo, modalEliminar: false })
+            }
         }).catch(error=>{
             console.log(error.message);
      })}
@@ -98,7 +105,7 @@ export class TaskM extends Component {
     render() {
         const {form} = this.state;
         return (
-            <div>
+            <>
                 <div className="App">
                     <br />
                     <Button
@@ -122,6 +129,7 @@ export class TaskM extends Component {
                             <tr >
                                 <th>ID</th>
                                 <th>TASK</th>
+                                <th>ESTATUS</th>
                                 <th>ACCIONES</th>
                             </tr>
                         </thead>
@@ -131,6 +139,14 @@ export class TaskM extends Component {
                                     <tr key={userID.id}>
                                         <td>{userID.id}</td>
                                         <td>{userID.title}</td>
+                                        <td>
+                                            <input 
+                                            type="checkbox"
+                                            checked={userID.completed}
+                                            onChange={this.handleChange}
+                                            >
+                                            </input>
+                                        </td>
                                         <td>
                                             <button className="btn btn-secondary" 
                                             onClick={()=>{this.seleccionarTask(userID); this.modalInsertar()}}>Editar</button>
@@ -189,11 +205,11 @@ export class TaskM extends Component {
                         Estás seguro que deseas eliminar esta Task? {form && form.title}
                     </ModalBody>
                     <ModalFooter>
-                        <button className="btn btn-success" onClick={()=>this.peticionDelete()}>Si</button>
-                        <button className="btn btn-danger" onClick={()=>this.setState({modalEliminar: false})}>NO</button>
+                        <Button className="btn btn-success" onClick={()=>this.peticionDelete()}>Si</Button>
+                        <Button className="btn btn-danger" onClick={()=>this.setState({modalEliminar: false})}>NO</Button>
                     </ModalFooter>
                 </Modal>
-            </div>
+            </>
         )
     }
 }
