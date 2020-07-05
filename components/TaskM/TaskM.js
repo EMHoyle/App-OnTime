@@ -3,29 +3,40 @@ import axios from 'axios';
 import {Button, Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Input, Label} from 'reactstrap';
 
 //constante JSON
-const url = "https://jsonplaceholder.typicode.com/todos";
+const url = "https://jsonplaceholder.typicode.com/todos/";
 const initState = { 
-    todo: [],
-    modalInsertar: false,
-    modalEliminar: false,
-    tipoModal: "",
-    form: {
-        id: "",
-        title: "",
-      }
-};
+            todo: [],
+            modalInsertar: false,
+            modalEliminar: false,
+            tipoModal: "",
+            form: {
+                id: "",
+                title: "",
+              },
+        };
 
 export class TaskM extends Component {
     
     constructor(props) {
         super(props)
 
-        this.state = initState
+        this.state = { 
+            todo: [],
+            modalInsertar: false,
+            modalEliminar: false,
+            tipoModal: "",
+            form: {
+                id: "",
+                title: "",
+              },
+        };
     }
 
 //acciones
-    modalInsertar = () => this.setState(oldState => ({...initState, todo: oldState.todo, modalInsertar: !oldState.modalInsertar, }))
-
+    modalInsertar=()=>{
+        this.setState({modalInsertar: !this.state.modalInsertar});
+    }
+    
     handleChange= async e=>{
         e.persist();
         await this.setState({
@@ -56,31 +67,28 @@ export class TaskM extends Component {
           })
     }
 
-     peticionPost= async ()=>{
-         await axios.post(url, this.state.form).then(response=>{
-           this.modalInsertar();
-           this.peticionGet();
-           console.log(response);
-         }).catch(error=>{
-           console.log(error.message);
-         })
-     }
+    peticionPost = () => axios.post(url, this.state.form).then(response=>{
+        if (response.status === 201)
+           this.setState(oldState => ({...initState, todo: [...oldState.todo, oldState.form], modalInsertar: !oldState.modalInsertar, }))
+            }).catch(error=>{
+            console.log(error.message);
+    })
 
-     peticionPut=()=>{
-         axios.put(url + this.state.form.id, this.state.form).then(response=>{
-             this.modalInsertar();
-             this.peticionGet();
-             console.log(response);
-         })
-     }
+    peticionPut=()=>{
+          axios.put("https://jsonplaceholder.typicode.com/todos/1", this.state.form).then(response=>{
+                  this.modalInsertar();
+                  this.peticionGet();
+          }).catch(error=>{
+             console.log(error.message);
+      })}
 
      peticionDelete=()=>{
         axios.delete(url + this.state.form.id).then(response=>{
             this.setState({modalEliminar: false});
             this.peticionGet();
-            console.log(response);
-        })
-     }
+        }).catch(error=>{
+            console.log(error.message);
+     })}
     
     componentDidMount() {
         this.peticionGet();
@@ -96,13 +104,15 @@ export class TaskM extends Component {
                     <Button
                         className="btn btn-success" 
                         onClick={
-                            () => {
-                                this.setState(oldState => ({
+                            () => this.setState(oldState => ({
                                     ...oldState,
-                                    tipoModal: "insertar"
-                                }));
-                                this.modalInsertar()
-                            }}
+                                    modalInsertar: !oldState.modalInsertar,
+                                    tipoModal: "insertar",
+                                    form: {
+                                        id: this.state.todo.length+1,
+                                        title: "",
+                                      }
+                                }))}
                     >
                                 Agregar Task
                     </Button>
@@ -151,7 +161,7 @@ export class TaskM extends Component {
                         id= "id"
                         readOnly 
                         onChange={this.handleChange}
-                        value={this.state.todo.length+1}/>
+                        value={form.id}/>
                         <br />
                         <Label htmlFor="title">Task</Label>
                         <Input 
@@ -166,8 +176,7 @@ export class TaskM extends Component {
 
                     <ModalFooter>
                         {this.state.tipoModal == "insertar"?
-                        <Button className="btn btn-success" onClick={()=>this.peticionPost()}>Agregar</Button>
-                        :
+                        <Button className="btn btn-success" onClick={()=>this.peticionPost()}>Agregar</Button>:
                         <Button className="btn btn-success" onClick={()=>this.peticionPut()}>Actualizar</Button>
                         }
                         <Button className="btn btn-danger" onClick={()=>this.modalInsertar()}>Cancelar</Button>
@@ -189,4 +198,4 @@ export class TaskM extends Component {
     }
 }
 
-export default TaskM;
+export default TaskM
